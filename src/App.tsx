@@ -20,7 +20,8 @@ function App() {
     (fieldId: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
       const key = e.key;
 
-      // Allow backspace, delete, tab, escape, enter, and navigation keys
+      // Allow backspace, delete, tab, escape, enter, and left/right arrows
+      // Note: ArrowUp and ArrowDown are handled globally for navigation
       if (
         [
           "Backspace",
@@ -30,8 +31,6 @@ function App() {
           "Enter",
           "ArrowLeft",
           "ArrowRight",
-          "ArrowUp",
-          "ArrowDown",
         ].includes(key)
       ) {
         return;
@@ -75,7 +74,7 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+      if (e.key === "ArrowUp") {
         e.preventDefault();
         const focusableElements = document.querySelectorAll(
           'input:not([tabindex="-1"]):not([readonly]), button, [tabindex]:not([tabindex="-1"])'
@@ -89,7 +88,7 @@ function App() {
         } else if (currentIndex === 0) {
           focusableElements[focusableElements.length - 1].focus();
         }
-      } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+      } else if (e.key === "ArrowDown") {
         e.preventDefault();
         const focusableElements = document.querySelectorAll(
           'input:not([tabindex="-1"]):not([readonly]), button, [tabindex]:not([tabindex="-1"])'
@@ -104,6 +103,7 @@ function App() {
           focusableElements[0].focus();
         }
       }
+      // Left and Right arrows now behave normally (no preventDefault, no custom handling)
     };
 
     document.addEventListener("keydown", handleKeyDown);
