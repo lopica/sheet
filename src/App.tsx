@@ -1,0 +1,440 @@
+import "./App.css";
+import { useState, useEffect } from "react";
+
+function App() {
+  const [selectedMarkers, setSelectedMarkers] = useState<{
+    [key: number]: string | null;
+  }>({});
+  const [numberInputs, setNumberInputs] = useState<{ [key: string]: string }>(
+    {}
+  );
+
+  const handleMarkerChange = (questionNum: number, value: string) => {
+    setSelectedMarkers((prev) => ({
+      ...prev,
+      [questionNum]: prev[questionNum] === value ? null : value,
+    }));
+  };
+
+  const handleNumberKeyDown =
+    (fieldId: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const key = e.key;
+
+      // Allow backspace, delete, tab, escape, enter, and navigation keys
+      if (
+        [
+          "Backspace",
+          "Delete",
+          "Tab",
+          "Escape",
+          "Enter",
+          "ArrowLeft",
+          "ArrowRight",
+          "ArrowUp",
+          "ArrowDown",
+        ].includes(key)
+      ) {
+        return;
+      }
+
+      // If it's a number, replace the current value
+      if (/^[0-9]$/.test(key)) {
+        e.preventDefault();
+        setNumberInputs((prev) => ({
+          ...prev,
+          [fieldId]: key,
+        }));
+      } else {
+        // Block all other keys
+        e.preventDefault();
+      }
+    };
+
+  const calculateListeningTotal = () => {
+    const allQuestionsAnswered = Array.from(
+      { length: 40 },
+      (_, i) => i + 1
+    ).every(
+      (questionNum) =>
+        selectedMarkers[questionNum] === "correct" ||
+        selectedMarkers[questionNum] === "incorrect"
+    );
+
+    if (!allQuestionsAnswered) {
+      return "";
+    }
+
+    const correctCount = Object.entries(selectedMarkers).filter(
+      ([_, value]) => value === "correct"
+    ).length;
+
+    return correctCount.toString().padStart(2, "0");
+  };
+
+  const listeningTotal = calculateListeningTotal();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        const focusableElements = document.querySelectorAll(
+          'input:not([tabindex="-1"]):not([readonly]), button, [tabindex]:not([tabindex="-1"])'
+        ) as NodeListOf<HTMLElement>;
+
+        const currentIndex = Array.from(focusableElements).indexOf(
+          document.activeElement as HTMLElement
+        );
+        if (currentIndex > 0) {
+          focusableElements[currentIndex - 1].focus();
+        } else if (currentIndex === 0) {
+          focusableElements[focusableElements.length - 1].focus();
+        }
+      } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        const focusableElements = document.querySelectorAll(
+          'input:not([tabindex="-1"]):not([readonly]), button, [tabindex]:not([tabindex="-1"])'
+        ) as NodeListOf<HTMLElement>;
+
+        const currentIndex = Array.from(focusableElements).indexOf(
+          document.activeElement as HTMLElement
+        );
+        if (currentIndex < focusableElements.length - 1) {
+          focusableElements[currentIndex + 1].focus();
+        } else if (currentIndex === focusableElements.length - 1) {
+          focusableElements[0].focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-white">
+      {/* Header with logos */}
+      <div className="flex justify-around items-center mb-6">
+        <div className="w-4 h-4 bg-gray-800"></div>
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-g3AbQWDorfUIDxfR4Q5U6iWgTMhB51.png"
+          alt="British Council"
+          className="h-12 filter grayscale"
+        />
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-NMS6cgv0qTVug1sa4iwg4DryCtpIox.png"
+          alt="IDP"
+          className="h-12 filter grayscale"
+        />
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-H8wAfgTbHHxi537UFp8GIRNz7XifOz.png"
+          alt="Cambridge Assessment English"
+          className="h-12 filter grayscale"
+        />
+        <div className="w-4 h-4 bg-gray-800"></div>
+      </div>
+
+      {/* Title */}
+      <h1 className="text-center font-bold text-lg mb-6">
+        IELTS Listening Answer Sheet
+      </h1>
+
+      {/* Form fields */}
+      <div className="mb-6">
+        <div className="mb-4">
+          <div className="flex items-center space-x-4">
+            <div className="w-16 text-xs text-right leading-tight">
+              <div>Candidate</div>
+              <div>Name</div>
+            </div>
+            <input
+              type="text"
+              className="flex-1 border border-black h-8 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex items-center space-x-4">
+            <div className="w-16 text-xs text-right leading-tight">
+              <div>Candidate</div>
+              <div>No.</div>
+            </div>
+            <div className="flex space-x-1">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <input
+                  key={i}
+                  type="text"
+                  maxLength={1}
+                  value={numberInputs[`candidate-${i}`] || ""}
+                  onKeyDown={handleNumberKeyDown(`candidate-${i}`)}
+                  onChange={() => {}} // Prevent React warning
+                  className="w-6 h-8 border border-black text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  style={{ caretColor: "transparent" }}
+                />
+              ))}
+            </div>
+            <div className="flex items-center space-x-2 ml-8">
+              <div className="text-xs text-right leading-tight">
+                <div>Centre</div>
+                <div>No.</div>
+              </div>
+              <div className="flex space-x-1">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    maxLength={1}
+                    value={numberInputs[`centre-${i}`] || ""}
+                    onKeyDown={handleNumberKeyDown(`centre-${i}`)}
+                    className="w-6 h-8 border border-black text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    style={{ caretColor: "transparent" }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <div className="flex items-center space-x-4">
+            <span className="text-xs">Test Date</span>
+            <div className="flex items-end space-x-2">
+              <span className="text-xs mb-1">Day</span>
+              <div className="flex space-x-1">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    maxLength={1}
+                    value={numberInputs[`day-${i}`] || ""}
+                    onKeyDown={handleNumberKeyDown(`day-${i}`)}
+                    className="w-6 h-8 border border-black text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    style={{ caretColor: "transparent" }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex items-end space-x-2">
+              <span className="text-xs mb-1">Month</span>
+              <div className="flex space-x-1">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    maxLength={1}
+                    value={numberInputs[`month-${i}`] || ""}
+                    onKeyDown={handleNumberKeyDown(`month-${i}`)}
+                    className="w-6 h-8 border border-black text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    style={{ caretColor: "transparent" }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex items-end space-x-2">
+              <span className="text-xs mb-1">Year</span>
+              <div className="flex space-x-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    maxLength={1}
+                    value={numberInputs[`year-${i}`] || ""}
+                    onKeyDown={handleNumberKeyDown(`year-${i}`)}
+                    className="w-6 h-8 border border-black text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    style={{ caretColor: "transparent" }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Answer grid */}
+      <div className="border-2 border-black">
+        {/* Listening headers row */}
+        <div className="bg-gray-400 text-white text-xs font-bold py-1 px-2">
+          <div className="flex justify-between items-center gap-4 mx-16">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="text-center">
+                Listening
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2">
+          {/* Left column: Questions 1-20 */}
+          <div className="border-r border-black">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-12 border-b border-gray-300 min-h-[24px] bg-white"
+              >
+                <div
+                  className={`col-span-1 text-center text-xs font-bold flex items-center justify-center ${
+                    (i + 1) % 2 === 1
+                      ? "bg-gray-800 text-white"
+                      : "bg-white text-gray-800 border-r border-gray-300"
+                  }`}
+                >
+                  {i + 1}
+                </div>
+                <input
+                  type="text"
+                  className="col-span-8 border-r border-gray-300 px-2 text-xs focus:outline-none bg-white"
+                />
+                <div className="col-span-3 text-center text-xs flex items-center justify-center space-x-1 px-1">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedMarkers[i + 1] === "correct"}
+                      onChange={() => handleMarkerChange(i + 1, "correct")}
+                      className="sr-only"
+                      tabIndex={-1}
+                    />
+                    <div
+                      className={`w-3 h-3 border border-gray-400 rounded-sm flex items-center justify-center text-[8px] hover:bg-gray-200 ${
+                        selectedMarkers[i + 1] === "correct"
+                          ? "bg-green-500 text-white border-green-500"
+                          : ""
+                      }`}
+                    >
+                      ✓
+                    </div>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedMarkers[i + 1] === "incorrect"}
+                      onChange={() => handleMarkerChange(i + 1, "incorrect")}
+                      className="sr-only"
+                      tabIndex={-1}
+                    />
+                    <div
+                      className={`w-3 h-3 border border-gray-400 rounded-sm flex items-center justify-center text-[8px] hover:bg-gray-200 ${
+                        selectedMarkers[i + 1] === "incorrect"
+                          ? "bg-red-500 text-white border-red-500"
+                          : ""
+                      }`}
+                    >
+                      ✗
+                    </div>
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right column: Questions 21-40 */}
+          <div>
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div
+                key={i + 20}
+                className="grid grid-cols-12 border-b border-gray-300 min-h-[24px] bg-white"
+              >
+                <div
+                  className={`col-span-1 text-center text-xs font-bold flex items-center justify-center ${
+                    (i + 21) % 2 === 1
+                      ? "bg-gray-800 text-white"
+                      : "bg-white text-gray-800 border-r border-gray-300"
+                  }`}
+                >
+                  {i + 21}
+                </div>
+                <input
+                  type="text"
+                  className="col-span-8 border-r border-gray-300 px-2 text-xs focus:outline-none bg-white"
+                />
+                <div className="col-span-3 text-center text-xs flex items-center justify-center space-x-1 px-1">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedMarkers[i + 21] === "correct"}
+                      onChange={() => handleMarkerChange(i + 21, "correct")}
+                      className="sr-only"
+                      tabIndex={-1}
+                    />
+                    <div
+                      className={`w-3 h-3 border border-gray-400 rounded-sm flex items-center justify-center text-[8px] hover:bg-gray-200 ${
+                        selectedMarkers[i + 21] === "correct"
+                          ? "bg-green-500 text-white border-green-500"
+                          : ""
+                      }`}
+                    >
+                      ✓
+                    </div>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedMarkers[i + 21] === "incorrect"}
+                      onChange={() => handleMarkerChange(i + 21, "incorrect")}
+                      className="sr-only"
+                      tabIndex={-1}
+                    />
+                    <div
+                      className={`w-3 h-3 border border-gray-400 rounded-sm flex items-center justify-center text-[8px] hover:bg-gray-200 ${
+                        selectedMarkers[i + 21] === "incorrect"
+                          ? "bg-red-500 text-white border-red-500"
+                          : ""
+                      }`}
+                    >
+                      ✗
+                    </div>
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="border-2 border-black border-t-0">
+        <div className="px-2 py-1 flex items-center space-x-4 text-xs">
+          <span>Marker 2 Signature:</span>
+          <div className="flex-1 border border-black h-6 px-2 text-xs bg-gray-50"></div>
+          <span>Marker 1 Signature:</span>
+          <div className="flex-1 border border-black h-6 px-2 text-xs bg-gray-50"></div>
+          <span>Listening Total:</span>
+          <div className="flex">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <input
+                key={i}
+                type="text"
+                maxLength={1}
+                value={listeningTotal[i] || ""}
+                readOnly
+                tabIndex={-1}
+                className={`w-6 h-8 border border-black text-center text-xs focus:outline-none bg-gray-50 pointer-events-none ${
+                  i > 0 ? "-ml-px" : ""
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer with QR code */}
+      <div className="flex justify-between items-center mt-6">
+        <div className="w-4 h-4 bg-gray-800"></div>
+        <div className="w-16 h-16 border-2 border-black flex items-center justify-center">
+          <div className="w-12 h-12 bg-black"></div>
+        </div>
+        <div className="flex space-x-4">
+          <div className="w-20 h-4 bg-gray-200"></div>
+          <div className="w-20 h-4 bg-gray-300"></div>
+          <div className="w-20 h-4 bg-gray-500"></div>
+          <div className="w-20 h-4 bg-gray-600"></div>
+          <div className="w-20 h-4 bg-gray-800"></div>
+        </div>
+        <div className="flex flex-col items-center">
+          <div className="text-xs mb-1">20058</div>
+          <div className="w-8 h-8 border border-black"></div>
+        </div>
+        <div className="w-4 h-4 bg-gray-800"></div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
